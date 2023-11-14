@@ -13,9 +13,9 @@ public struct DeclSyntaxScanner {
 
     public init(declSyntax: some DeclGroupSyntax, at node: AttributeSyntax) throws {
         if let value = declSyntax.as(EnumDeclSyntax.self) {
-            self.declSyntax = .enum(value)
+            type = .enum(value)
         } else if let value = declSyntax.as(ProtocolDeclSyntax.self) {
-            self.declSyntax = .protocol(value)
+            type = .protocol(value)
         } else {
             throw Diagnostic.internal(debugMessage: "Incomplete implementation for \(declSyntax).").error(at: node)
         }
@@ -24,16 +24,16 @@ public struct DeclSyntaxScanner {
 
     public init(declSyntax: some DeclSyntaxProtocol, at node: AttributeSyntax) throws {
         if let value = declSyntax.as(EnumDeclSyntax.self) {
-            self.declSyntax = .enum(value)
+            type = .enum(value)
         } else if let value = declSyntax.as(ProtocolDeclSyntax.self) {
-            self.declSyntax = .protocol(value)
+            type = .protocol(value)
         } else {
             throw Diagnostic.internal(debugMessage: "Incomplete implementation for \(declSyntax).").error(at: node)
         }
         self.node = node
     }
 
-    public let declSyntax: DeclSyntaxType
+    public let type: DeclSyntaxType
     let node: AttributeSyntax
 
     public var name: String {
