@@ -23,5 +23,13 @@ let package = Package(
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
             ]
         ),
+        .testTarget(
+            name: "SwiftSyntaxExtrasTests",
+            dependencies: [
+                "SwiftSyntaxExtras",
+                .product(name: "SwiftParser", package: "swift-syntax"),
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+            ]
+        ),
     ]
 )

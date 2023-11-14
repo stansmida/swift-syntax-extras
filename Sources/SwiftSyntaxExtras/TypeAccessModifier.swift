@@ -6,6 +6,7 @@ public enum TypeAccessModifier: String {
 
     static var `default`: Self { .internal }
  
+    #warning("either it can be passed or change to string")
     public static let parameterLabel: StaticString = "accessModifier"
 
     public var stringWithSpaceAfter: String { rawValue + " " }
@@ -36,6 +37,23 @@ extension TypeAccessModifier: Comparable {
             case .fileprivate: 1
             case .private: 0
         }
+    }
+}
+
+public extension TypeAccessModifier {
+
+    init?(declSyntax: some DeclSyntaxProtocol, at node: AttributeSyntax) throws {
+        let explicit = try AttributeSyntaxScanner(node: node).typeAccessModifier
+        let implicit = try DeclSyntaxScanner(declSyntax: declSyntax, at: node).typeAccessModifier
+        if let explicit {
+            guard explicit <= (implicit ?? .internal) else {
+                throw Diagnostic.invalidArgument("Expansion type cannot have less restrictive access than its anchor declaration.").error(at: node)
+            }
+        }
+        guard let result = explicit ?? implicit else {
+            return nil
+        }
+        self = result
     }
 }
 
