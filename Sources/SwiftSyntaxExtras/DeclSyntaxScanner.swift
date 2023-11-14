@@ -38,7 +38,7 @@ public struct DeclSyntaxScanner {
 
     public var name: String {
         get throws {
-            switch declSyntax {
+            switch type {
                 case .enum(let value):
                     guard case .identifier(let name) = value.name.tokenKind else {
                         throw Diagnostic.internal(debugMessage: "Unexpected token kind: '\(value.name.tokenKind)'.").error(at: node)
@@ -54,7 +54,7 @@ public struct DeclSyntaxScanner {
     }
 
     public var typeAccessModifier: TypeAccessModifier? {
-        switch declSyntax {
+        switch type {
             case .enum(let value):
                 value.modifiers.lazy.compactMap({ TypeAccessModifier($0) }).first
             case .protocol(let value):
