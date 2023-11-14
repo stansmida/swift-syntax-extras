@@ -45,15 +45,28 @@ public extension TypeAccessModifier {
     init?(declSyntax: some DeclSyntaxProtocol, at node: AttributeSyntax) throws {
         let explicit = try AttributeSyntaxScanner(node: node).typeAccessModifier
         let implicit = try DeclSyntaxScanner(declSyntax: declSyntax, at: node).typeAccessModifier
+        guard let result = try Self.make(explicit: explicit, implicit: implicit, at: node) else {
+            return nil
+        }
+        self = result
+    }
+
+    init?(declSyntax: some DeclGroupSyntax, at node: AttributeSyntax) throws {
+        let explicit = try AttributeSyntaxScanner(node: node).typeAccessModifier
+        let implicit = try DeclSyntaxScanner(declSyntax: declSyntax, at: node).typeAccessModifier
+        guard let result = try Self.make(explicit: explicit, implicit: implicit, at: node) else {
+            return nil
+        }
+        self = result
+    }
+
+    private static func make(explicit: TypeAccessModifier?, implicit: TypeAccessModifier?, at node: AttributeSyntax) throws -> TypeAccessModifier? {
         if let explicit {
             guard explicit <= (implicit ?? .internal) else {
                 throw Diagnostic.invalidArgument("Expansion type cannot have less restrictive access than its anchor declaration.").error(at: node)
             }
         }
-        guard let result = explicit ?? implicit else {
-            return nil
-        }
-        self = result
+        return explicit ?? implicit
     }
 }
 
