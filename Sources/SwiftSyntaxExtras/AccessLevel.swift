@@ -2,7 +2,7 @@ import SwiftSyntax
 
 // MARK: - AccessLevel
 
-public enum AccessLevel: String, Comparable {
+public enum AccessLevel: String {
 
     case `open`
     case `public`
@@ -13,6 +13,9 @@ public enum AccessLevel: String, Comparable {
     case fileprivateSet = "fileprivate(set)"
     case `private`
     case privateSet = "private(set)"
+}
+
+extension AccessLevel: Comparable {
 
     /// More restrictive < more accessible.
     public static func < (lhs: AccessLevel, rhs: AccessLevel) -> Bool {
@@ -31,6 +34,17 @@ public enum AccessLevel: String, Comparable {
             case .`private`:        1
             case .privateSet:       0
         }
+    }
+}
+
+extension AccessLevel: LosslessStringConvertible {
+
+    public init?(_ description: String) {
+        self.init(rawValue: description)
+    }
+    
+    public var description: String {
+        rawValue
     }
 }
 
@@ -88,6 +102,17 @@ extension TypeAccessModifier: Comparable {
     /// More restrictive < more accessible.
     public static func < (lhs: TypeAccessModifier, rhs: TypeAccessModifier) -> Bool {
         lhs.accessLevel < rhs.accessLevel
+    }
+}
+
+extension TypeAccessModifier: LosslessStringConvertible {
+    
+    public init?(_ description: String) {
+        self.init(rawValue: description)
+    }
+    
+    public var description: String {
+        rawValue
     }
 }
 
