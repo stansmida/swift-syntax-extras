@@ -2,12 +2,23 @@ import Foundation
 import SwiftDiagnostics
 import SwiftSyntax
 
+/// For unexpected, not yet implemented or otherwise invalid values when working with SwiftSyntax
+/// that should emit via `DiagnosticMessage`.
+public struct SyntaxInternal: Error, CustomStringConvertible, CustomDebugStringConvertible {
+
+    public init(_ file: String = #file, _ line: Int = #line, debugMessage: String) {
+        debugDescription = debugMessage
+        description = "SyntaxInternal error at \(file):\(line)."
+    }
+
+    public let debugDescription: String
+    public let description: String
+}
+
 public enum Diagnostic: DiagnosticMessage {
 
-    /// Something unexpected has happened. Owner of this package is responsible for resolving this error.
-    /// - Important: Don't create this directly but use `Diagnostic.internal(_:_:debugMessage:)` static
-    /// method instead.
-    case `internal`(InternalError)
+    /// See ``SyntaxInternal``.
+    case `internal`(SyntaxInternal)
     /// Macro called with an invalid argument. E.g. corrupted name identifier, or access level more accessible
     /// than the attachee declaration.
     case invalidArgument(String)
@@ -56,23 +67,6 @@ public enum Diagnostic: DiagnosticMessage {
     }
 }
 
-public extension Diagnostic {
-
-    struct InternalError: CustomStringConvertible, CustomDebugStringConvertible {
-        public let debugDescription: String
-        public let description: String
-    }
-
-    static func `internal`(_ file: String = #file, _ line: Int = #line, debugMessage: String) -> Diagnostic {
-        let result = Diagnostic.internal(InternalError(
-            debugDescription: debugMessage,
-            description: "Internal error at \(file):\(line)."
-        ))
-        print(String(describing: result), String(reflecting: result))
-        return result
-    }
-}
-
 public extension DiagnosticMessage {
 
     func error(at node: AttributeSyntax) -> DiagnosticsError {
@@ -85,6 +79,8 @@ public extension Error {
     func diagnosticError(at node: AttributeSyntax) -> DiagnosticsError {
         if let diagnosticsError = self as? DiagnosticsError {
             diagnosticsError
+        } else if let syntaxInternal = self as? SyntaxInternal {
+            Diagnostic.internal(syntaxInternal).error(at: node)
         } else {
             Diagnostic.uncaughtError(self).error(at: node)
         }

@@ -15,7 +15,7 @@ public struct AttributeSyntaxScanner {
             return nil
         }
         guard let memberAccessArgument = argument.expression.as(MemberAccessExprSyntax.self) else {
-            throw Diagnostic.internal(debugMessage: "Unexpected '\(label)' expression type: \(argument.expression).").error(at: node)
+            throw SyntaxInternal(debugMessage: "Unexpected '\(label)' expression type: \(argument.expression).")
         }
         return memberAccessArgument
     }
@@ -26,7 +26,7 @@ public struct AttributeSyntaxScanner {
         }
         let result = try arguments.map { labeledExprSyntax in
             guard let memberAccessExprSyntax = labeledExprSyntax.expression.as(MemberAccessExprSyntax.self) else {
-                throw Diagnostic.internal(debugMessage: "Unexpected '\(label)' expression type: \(labeledExprSyntax.expression).").error(at: node)
+                throw SyntaxInternal(debugMessage: "Unexpected '\(label)' expression type: \(labeledExprSyntax.expression).")
             }
             return memberAccessExprSyntax
         }
@@ -38,10 +38,10 @@ public struct AttributeSyntaxScanner {
             return nil
         }
         guard let stringLiteralArgument = argument.expression.as(StringLiteralExprSyntax.self) else {
-            throw Diagnostic.internal(debugMessage: "Unexpected '\(label)' expression type: \(argument.expression).").error(at: node)
+            throw SyntaxInternal(debugMessage: "Unexpected '\(label)' expression type: \(argument.expression).")
         }
         guard let text = stringLiteralArgument.segments.firstToken(viewMode: .sourceAccurate)?.text else {
-            throw Diagnostic.internal(debugMessage: "Unexpected '\(label)' expression: '\(stringLiteralArgument)'.").error(at: node)
+            throw SyntaxInternal(debugMessage: "Unexpected '\(label)' expression: '\(stringLiteralArgument)'.")
         }
         return text
     }
@@ -61,7 +61,7 @@ public struct AttributeSyntaxScanner {
             return nil
         }
         guard let labeledExprListSyntax = arguments.as(LabeledExprListSyntax.self) else {
-            throw Diagnostic.internal(debugMessage: "Unexpected arguments type.").error(at: node)
+            throw SyntaxInternal(debugMessage: "Unexpected arguments type.")
         }
         // Handles variadics.
         guard case let filteredExprListSyntax = labeledExprListSyntax.drop(while: { $0.label.map { $0.text != label } ?? true }).prefix(while: { $0.label?.text == label || $0.label == nil }), !filteredExprListSyntax.isEmpty else {
@@ -78,18 +78,16 @@ public struct AttributeSyntaxScanner {
 
     // MARK: TypeAccessModifier argument
 
-    public var typeAccessModifier: TypeAccessModifier? {
-        get throws {
-            guard let argument = try memberAccessArgument(with: String(describing: TypeAccessModifier.parameterLabel)) else {
-                return nil
-            }
-            guard let rawValue = argument.memberName else {
-                throw Diagnostic.internal(debugMessage: "Unexpected member decl reference.").error(at: node)
-            }
-            guard let accessModifier = TypeAccessModifier(rawValue: rawValue) else {
-                throw Diagnostic.internal(debugMessage: "Unexpected access modifier: '\(rawValue)'.").error(at: node)
-            }
-            return accessModifier
+    public func typeAccessModifier(withLabel label: String) throws -> TypeAccessModifier? {
+        guard let argument = try memberAccessArgument(with: label) else {
+            return nil
         }
+        guard let rawValue = argument.memberName else {
+            throw SyntaxInternal(debugMessage: "Unexpected member decl reference.")
+        }
+        guard let accessModifier = TypeAccessModifier(rawValue: rawValue) else {
+            throw SyntaxInternal(debugMessage: "Unexpected access modifier: '\(rawValue)'.")
+        }
+        return accessModifier
     }
 }
